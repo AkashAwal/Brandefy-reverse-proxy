@@ -51,12 +51,32 @@ export async function GET(
     // Overwrite title
     html = html.replace(/<title>[^<]*<\/title>/, `<title>BranDeFy - Best Creative Agency in India</title>`);
 
+    const SEO_TITLE = "BranDeFy - Best Creative Agency in India";
+    const SEO_DESC = "Brandefy crafts high-converting websites, powerful branding, and strategic marketing solutions to help businesses grow faster, stand out online, and turn visitors into loyal customers.";
+
     // Overwrite or inject meta description
-    const metaDesc = `<meta name="description" content="Brandefy crafts high-converting websites, powerful branding, and strategic marketing solutions to help businesses grow faster, stand out online, and turn visitors into loyal customers.">`;
+    const metaDesc = `<meta name="description" content="${SEO_DESC}">`;
     if (html.includes(`name="description"`)) {
       html = html.replace(/<meta name="description"[^>]*>/i, metaDesc);
     } else {
       html = html.replace("</head>", `${metaDesc}</head>`);
+    }
+
+    // Overwrite or inject Open Graph tags (used by social embeds, link previews)
+    const ogTags = [
+      `<meta property="og:title" content="${SEO_TITLE}">`,
+      `<meta property="og:description" content="${SEO_DESC}">`,
+      `<meta name="twitter:title" content="${SEO_TITLE}">`,
+      `<meta name="twitter:description" content="${SEO_DESC}">`,
+    ];
+    html = html.replace(/<meta property="og:title"[^>]*>/i, ogTags[0]);
+    html = html.replace(/<meta property="og:description"[^>]*>/i, ogTags[1]);
+    html = html.replace(/<meta name="twitter:title"[^>]*>/i, ogTags[2]);
+    html = html.replace(/<meta name="twitter:description"[^>]*>/i, ogTags[3]);
+    // Inject any that weren't already present
+    const missingOg = ogTags.filter((tag) => !html.includes(tag));
+    if (missingOg.length > 0) {
+      html = html.replace("</head>", `${missingOg.join("")}</head>`);
     }
 
     // Lock title so Framer's client-side JS cannot overwrite it
