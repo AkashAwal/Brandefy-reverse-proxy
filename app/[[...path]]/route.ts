@@ -2,7 +2,11 @@ import { NextRequest } from "next/server";
 
 const FRAMER_BASE = "https://bdfbrandefy.framer.website/";
 
-const ALLOWED_PAGES = new Set(["", "videos", "portfolio", "404"]);
+const ALLOWED_PAGES = new Set(["", "videos",
+  "simross", "amarainteriors", "metallicawindows",
+  "belgee", "jairolia", "mars", "necesera","maya",
+  "atpatabytaste","cpj-momo","cpj-rabun","mmtime",
+  "jaiman", "contact", "portfolio", "404"]);
 
 export async function GET(
   req: NextRequest,
@@ -65,7 +69,7 @@ export async function GET(
     status: res.status,
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+      "Cache-Control": "public, s-maxage=8, stale-while-revalidate=6",
       ...(res.headers.get("content-encoding") && {
         "Content-Encoding": res.headers.get("content-encoding")!,
       }),
