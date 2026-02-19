@@ -48,6 +48,17 @@ export async function GET(
     // Rewrite any absolute Framer references to relative paths
     html = html.replaceAll(FRAMER_BASE, "");
 
+    // Overwrite title
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>BranDeFy - Best Creative Agency in India</title>`);
+
+    // Overwrite or inject meta description
+    const metaDesc = `<meta name="description" content="Brandefy crafts high-converting websites, powerful branding, and strategic marketing solutions to help businesses grow faster, stand out online, and turn visitors into loyal customers.">`;
+    if (html.includes(`name="description"`)) {
+      html = html.replace(/<meta name="description"[^>]*>/i, metaDesc);
+    } else {
+      html = html.replace("</head>", `${metaDesc}</head>`);
+    }
+
     // Remove the Framer badge/watermark (hide via CSS since it's rendered client-side)
     html = html.replace(
       "</head>",
