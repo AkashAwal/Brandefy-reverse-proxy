@@ -1,0 +1,74 @@
+import { NextRequest } from "next/server";
+
+const FRAMER_BASE = "https://warm-chart-037167.framer.app";
+
+const ALLOWED_PAGES = new Set(["", "videos", "portfolio", "404"]);
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ path?: string[] }> }
+) {
+  const { path } = await params;
+  const pathname = path ? `/${path.join("/")}` : "";
+
+  // For page routes, only allow the defined pages
+  // For asset routes (containing a dot like .js, .css, .png), always proxy
+  const isAsset = path?.some((segment) => segment.includes("."));
+  const isFramerInternal = path?.[0]?.startsWith("_");
+
+  // For unknown page routes, fetch the Framer 404 page instead
+  const isAllowedPage =
+    isAsset || isFramerInternal || ALLOWED_PAGES.has(path ? path.join("/") : "");
+
+  const targetUrl = isAllowedPage
+    ? `${FRAMER_BASE}${pathname}`
+    : `${FRAMER_BASE}/404`;
+
+  const res = await fetch(targetUrl, {
+    headers: {
+      "User-Agent": req.headers.get("user-agent") || "Mozilla/5.0",
+      Accept: req.headers.get("accept") || "*/*",
+      "Accept-Encoding": "identity",
+    },
+    cache: "force-cache",
+  });
+
+  const contentType = res.headers.get("content-type") || "";
+
+  // HTML responses: rewrite Framer URLs so assets resolve through our proxy
+  if (contentType.includes("text/html")) {
+    let html = await res.text();
+
+    // Rewrite any absolute Framer references to relative paths
+    html = html.replaceAll(FRAMER_BASE, "");
+
+    // Remove the Framer badge/watermark (hide via CSS since it's rendered client-side)
+    html = html.replace(
+      "</head>",
+      `<style>.__framer-badge { display: none !important; }</style></head>`
+    );
+
+    return new Response(html, {
+      status: isAllowedPage ? 200 : 404,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control":
+          "public, s-maxage=3600, stale-while-revalidate=86400",
+      },
+    });
+  }
+
+  // Non-HTML assets (JS, CSS, images, fonts): pass through with aggressive caching
+  const body = await res.arrayBuffer();
+
+  return new Response(body, {
+    status: res.status,
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+      ...(res.headers.get("content-encoding") && {
+        "Content-Encoding": res.headers.get("content-encoding")!,
+      }),
+    },
+  });
+}
