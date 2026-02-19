@@ -28,14 +28,16 @@ export async function GET(
     ? `${FRAMER_BASE}${pathname}`
     : `${FRAMER_BASE}404`;
 
+  const ONE_WEEK = 604800;
+
   const res = await fetch(targetUrl, {
     headers: {
       "User-Agent": req.headers.get("user-agent") || "Mozilla/5.0",
       Accept: req.headers.get("accept") || "*/*",
       "Accept-Encoding": "identity",
     },
-    cache: "force-cache",
-  });
+    next: { revalidate: ONE_WEEK },
+  } as RequestInit & { next: { revalidate: number } });
 
   const contentType = res.headers.get("content-type") || "";
 
@@ -56,8 +58,7 @@ export async function GET(
       status: isAllowedPage ? 200 : 404,
       headers: {
         "Content-Type": "text/html; charset=utf-8",
-        "Cache-Control":
-          "public, s-maxage=3, stale-while-revalidate=8",
+        "Cache-Control": `public, s-maxage=${ONE_WEEK}, stale-while-revalidate=${ONE_WEEK}`,
       },
     });
   }
@@ -69,7 +70,7 @@ export async function GET(
     status: res.status,
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, s-maxage=8, stale-while-revalidate=6",
+      "Cache-Control": `public, s-maxage=${ONE_WEEK}, stale-while-revalidate=${ONE_WEEK}`,
       ...(res.headers.get("content-encoding") && {
         "Content-Encoding": res.headers.get("content-encoding")!,
       }),
