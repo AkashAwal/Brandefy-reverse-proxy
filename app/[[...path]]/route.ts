@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-const FRAMER_BASE = "https://warm-chart-037167.framer.app";
+const FRAMER_BASE = "https://bdfbrandefy.framer.website/";
 
 const ALLOWED_PAGES = new Set(["", "videos", "portfolio", "404"]);
 
