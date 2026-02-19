@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ path?: string[] }> }
 ) {
   const { path } = await params;
-  const pathname = path ? `/${path.join("/")}` : "";
+  const pathname = path ? path.join("/") : "";
 
   // For page routes, only allow the defined pages
   // For asset routes (containing a dot like .js, .css, .png), always proxy
@@ -22,11 +22,11 @@ export async function GET(
 
   // For unknown page routes, fetch the Framer 404 page instead
   const isAllowedPage =
-    isAsset || isFramerInternal || ALLOWED_PAGES.has(path ? path.join("/") : "");
+    isAsset || isFramerInternal || ALLOWED_PAGES.has(pathname);
 
   const targetUrl = isAllowedPage
     ? `${FRAMER_BASE}${pathname}`
-    : `${FRAMER_BASE}/404`;
+    : `${FRAMER_BASE}404`;
 
   const res = await fetch(targetUrl, {
     headers: {
