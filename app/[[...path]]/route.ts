@@ -57,7 +57,7 @@ export async function GET(
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Cache-Control":
-          "public, s-maxage=3600, stale-while-revalidate=86400",
+          "public, s-maxage=3, stale-while-revalidate=8",
       },
     });
   }
