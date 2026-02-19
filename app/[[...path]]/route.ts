@@ -59,9 +59,10 @@ export async function GET(
       html = html.replace("</head>", `${metaDesc}</head>`);
     }
 
-    // Remove the Framer badge/watermark (hide via CSS since it's rendered client-side)
+    // Lock title so Framer's client-side JS cannot overwrite it
     html = html.replace(
       "</head>",
+      `<script>(function(){var t="BranDeFy - Best Creative Agency in India";document.title=t;Object.defineProperty(document,"title",{get:function(){return t;},set:function(){},configurable:false});})();</script>` +
       `<style>.__framer-badge { display: none !important; }</style></head>`
     );
 
