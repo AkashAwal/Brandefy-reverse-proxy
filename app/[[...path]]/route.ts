@@ -28,7 +28,7 @@ export async function GET(
     ? `${FRAMER_BASE}${pathname}`
     : `${FRAMER_BASE}404`;
 
-  const ONE_WEEK = 5;
+  const ONE_WEEK = 604800;
 
   const res = await fetch(targetUrl, {
     headers: {
