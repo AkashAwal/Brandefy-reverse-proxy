@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-const FRAMER_BASE = "https://bdfbrandefy.framer.website/";
+const FRAMER_BASE = "https://marvelous-osprey-690817.framer.app";
 
 const ALLOWED_PAGES = new Set(["", "videos",
   "simross", "amarainteriors", "metallicawindows",
@@ -28,7 +28,7 @@ export async function GET(
     ? `${FRAMER_BASE}${pathname}`
     : `${FRAMER_BASE}404`;
 
-  const ONE_WEEK = 604800;
+  const ONE_WEEK = 6048000;
 
   // Handle range requests for video files (critical for Safari/iOS)
   const range = req.headers.get("range");
