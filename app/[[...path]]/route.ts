@@ -30,12 +30,21 @@ export async function GET(
 
   const ONE_WEEK = 604800;
 
+  // Handle range requests for video files (critical for Safari/iOS)
+  const range = req.headers.get("range");
+  const fetchHeaders: Record<string, string> = {
+    "User-Agent": req.headers.get("user-agent") || "Mozilla/5.0",
+    Accept: req.headers.get("accept") || "*/*",
+    "Accept-Encoding": "identity",
+  };
+
+  // Add range header if present (for video seeking)
+  if (range) {
+    fetchHeaders["Range"] = range;
+  }
+
   const res = await fetch(targetUrl, {
-    headers: {
-      "User-Agent": req.headers.get("user-agent") || "Mozilla/5.0",
-      Accept: req.headers.get("accept") || "*/*",
-      "Accept-Encoding": "identity",
-    },
+    headers: fetchHeaders,
     next: { revalidate: ONE_WEEK },
   } as RequestInit & { next: { revalidate: number } });
 
@@ -86,6 +95,23 @@ export async function GET(
       `<style>.__framer-badge { display: none !important; }</style></head>`
     );
 
+    // Fix Safari/iOS video compatibility issues
+    // Add playsinline and muted attributes to video elements for iOS Safari
+    html = html.replace(
+      /<video([^>]*)>/gi,
+      (match, attributes) => {
+        // Add playsinline if not already present
+        if (!attributes.includes('playsinline')) {
+          attributes += ' playsinline';
+        }
+        // Add muted if autoplay is present (required for iOS Safari autoplay)
+        if (attributes.includes('autoplay') && !attributes.includes('muted')) {
+          attributes += ' muted';
+        }
+        return `<video${attributes}>`;
+      }
+    );
+
     return new Response(html, {
       status: isAllowedPage ? 200 : 404,
       headers: {
@@ -95,17 +121,44 @@ export async function GET(
     });
   }
 
-  // Non-HTML assets (JS, CSS, images, fonts): pass through with aggressive caching
+  // Non-HTML assets (JS, CSS, images, fonts, videos): pass through with aggressive caching
   const body = await res.arrayBuffer();
+
+  // Safari/iOS video compatibility headers
+  const videoHeaders: Record<string, string> = {
+    "Content-Type": contentType,
+    "Cache-Control": `public, s-maxage=${ONE_WEEK}, stale-while-revalidate=${ONE_WEEK}`,
+    ...(res.headers.get("content-encoding") && {
+      "Content-Encoding": res.headers.get("content-encoding")!,
+    }),
+  };
+
+  // Add Safari/iOS specific headers for video files
+  if (contentType.includes("video/")) {
+    // Accept-Ranges is critical for Safari/iOS video playback
+    videoHeaders["Accept-Ranges"] = "bytes";
+    
+    // Add content-length if available
+    const contentLength = res.headers.get("content-length");
+    if (contentLength) {
+      videoHeaders["Content-Length"] = contentLength;
+    }
+    
+    // Add range support headers
+    const acceptRanges = res.headers.get("accept-ranges");
+    if (acceptRanges) {
+      videoHeaders["Accept-Ranges"] = acceptRanges;
+    }
+    
+    // Add content-range if this is a partial response
+    const contentRange = res.headers.get("content-range");
+    if (contentRange) {
+      videoHeaders["Content-Range"] = contentRange;
+    }
+  }
 
   return new Response(body, {
     status: res.status,
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": `public, s-maxage=${ONE_WEEK}, stale-while-revalidate=${ONE_WEEK}`,
-      ...(res.headers.get("content-encoding") && {
-        "Content-Encoding": res.headers.get("content-encoding")!,
-      }),
-    },
+    headers: videoHeaders,
   });
 }
