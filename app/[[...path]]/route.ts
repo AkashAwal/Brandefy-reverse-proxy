@@ -29,6 +29,25 @@ export async function GET(
   const { path } = await params;
   const pathname = path ? path.join("/") : "";
 
+  // Serve local public files directly — never proxy these to Framer
+  const PUBLIC_FILES = new Set(["sitemap.xml", "robots.txt"]);
+  if (PUBLIC_FILES.has(pathname)) {
+    try {
+      const content = readFileSync(join(process.cwd(), "public", pathname), "utf-8");
+      const contentType = pathname.endsWith(".xml")
+        ? "application/xml; charset=utf-8"
+        : "text/plain; charset=utf-8";
+      return new Response(content, {
+        headers: {
+          "Content-Type": contentType,
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    } catch {
+      return new Response(null, { status: 404 });
+    }
+  }
+
   // For page routes, only allow the defined pages
   // For asset routes (containing a dot like .js, .css, .png), always proxy
   const isAsset = path?.some((segment) => segment.includes("."));
@@ -57,10 +76,18 @@ export async function GET(
     fetchHeaders["Range"] = range;
   }
 
-  const res = await fetch(targetUrl, {
-    headers: fetchHeaders,
-    next: { revalidate: ONE_WEEK },
-  } as RequestInit & { next: { revalidate: number } });
+  let res: Response;
+  try {
+    res = await fetch(targetUrl, {
+      headers: fetchHeaders,
+      next: { revalidate: ONE_WEEK },
+    } as RequestInit & { next: { revalidate: number } });
+  } catch {
+    return new Response("Page temporarily unavailable. Please try again.", {
+      status: 503,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
 
   const contentType = res.headers.get("content-type") || "";
 
