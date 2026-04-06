@@ -1,12 +1,26 @@
 import { NextRequest } from "next/server";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 const FRAMER_BASE = "https://marvelous-osprey-690817.framer.app";
 
-const ALLOWED_PAGES = new Set(["", "videos",
-  "simross", "amarainteriors", "metallicawindows",
-  "belgee", "jairolia", "mars", "necesera","maya",
-  "atpatabytaste","cpj-momo","cpj-rabun","mmtime",
-  "jaiman", "contact", "portfolio", "404"]);
+function loadAllowedPages(): Set<string> {
+  try {
+    const xml = readFileSync(join(process.cwd(), "public/sitemap.xml"), "utf-8");
+    const pages = new Set<string>(["404"]);
+    for (const match of xml.matchAll(/<loc>\s*https?:\/\/[^/]+\/?([^<\s]*)\s*<\/loc>/g)) {
+      pages.add(match[1].trim());
+    }
+    return pages;
+  } catch {
+    return new Set(["", "videos", "simross", "amarainteriors", "metallicawindows",
+      "belgee", "jairolia", "mars", "necesera", "maya",
+      "atpatabytaste", "cpj-momo", "cpj-rabun", "mmtime",
+      "jaiman", "contact", "portfolio", "404"]);
+  }
+}
+
+const ALLOWED_PAGES = loadAllowedPages();
 
 export async function GET(
   req: NextRequest,
@@ -25,8 +39,8 @@ export async function GET(
     isAsset || isFramerInternal || ALLOWED_PAGES.has(pathname);
 
   const targetUrl = isAllowedPage
-    ? `${FRAMER_BASE}${pathname}`
-    : `${FRAMER_BASE}404`;
+    ? `${FRAMER_BASE}/${pathname}`
+    : `${FRAMER_BASE}/404`;
 
   const ONE_WEEK = 6048000;
 
