@@ -61,7 +61,7 @@ export async function GET(
     ? `${FRAMER_BASE}/${pathname}`
     : `${FRAMER_BASE}/404`;
 
-  const ONE_WEEK = 1;
+  const ONE_WEEK = 6048000;
 
   // Handle range requests for video files (critical for Safari/iOS)
   const range = req.headers.get("range");
