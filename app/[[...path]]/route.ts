@@ -16,7 +16,7 @@ function loadAllowedPages(): Set<string> {
     return new Set(["", "videos", "simross", "amarainteriors", "metallicawindows",
       "belgee", "jairolia", "mars", "necesera", "maya",
       "atpatabytaste", "cpj-momo", "cpj-rabun", "mmtime",
-      "jaiman", "contact", "portfolio", "404"]);
+      "jaiman", "contact", "portfolio", "404", "ameeco", "nje", "ekansha"]);
   }
 }
 
