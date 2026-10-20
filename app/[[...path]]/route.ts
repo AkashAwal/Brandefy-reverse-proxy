@@ -61,11 +61,7 @@ export async function GET(
     ? `${FRAMER_BASE}/${pathname}`
     : `${FRAMER_BASE}/404`;
 
-<<<<<<< HEAD
   const ONE_WEEK = 1; // temporarily 1 second so new pages show up (normally 604800)
-=======
-  const ONE_WEEK = 1;
->>>>>>> 0f6bd95e0fc6fa022c0d62eec04e1a9e6b2f5b6a
 
   // Handle range requests for video files (critical for Safari/iOS)
   const range = req.headers.get("range");
